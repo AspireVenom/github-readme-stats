@@ -39,6 +39,9 @@ export default async (req, res) => {
     border_color,
     rank_icon,
     show,
+    // New: override rank
+    force_rank,
+    rank_percentile,
   } = req.query;
   res.setHeader("Content-Type", "image/svg+xml");
 
@@ -68,10 +71,10 @@ export default async (req, res) => {
 
   try {
     const showStats = parseArray(show);
-    
+
     // Handle count_private parameter - if true, include all commits (including private)
     const shouldIncludeAllCommits = parseBoolean(count_private) || parseBoolean(include_all_commits);
-    
+
     const stats = await fetchStats(
       username,
       shouldIncludeAllCommits,
@@ -81,6 +84,15 @@ export default async (req, res) => {
       showStats.includes("discussions_started"),
       showStats.includes("discussions_answered"),
     );
+
+    // Optional rank override
+    if (typeof force_rank === "string" && force_rank.trim() !== "") {
+      const parsedPercentile = Number.parseFloat(rank_percentile);
+      stats.rank = {
+        level: force_rank.trim(),
+        percentile: Number.isFinite(parsedPercentile) ? parsedPercentile : 1,
+      };
+    }
 
     let cacheSeconds = clampValue(
       parseInt(cache_seconds || CONSTANTS.CARD_CACHE_SECONDS, 10),
