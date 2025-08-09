@@ -20,6 +20,7 @@ export default async (req, res) => {
     hide_rank,
     show_icons,
     include_all_commits,
+    count_private,
     line_height,
     title_color,
     ring_color,
@@ -67,9 +68,13 @@ export default async (req, res) => {
 
   try {
     const showStats = parseArray(show);
+    
+    // Handle count_private parameter - if true, include all commits (including private)
+    const shouldIncludeAllCommits = parseBoolean(count_private) || parseBoolean(include_all_commits);
+    
     const stats = await fetchStats(
       username,
-      parseBoolean(include_all_commits),
+      shouldIncludeAllCommits,
       parseArray(exclude_repo),
       showStats.includes("prs_merged") ||
         showStats.includes("prs_merged_percentage"),
@@ -99,7 +104,7 @@ export default async (req, res) => {
         hide_border: parseBoolean(hide_border),
         card_width: parseInt(card_width, 10),
         hide_rank: parseBoolean(hide_rank),
-        include_all_commits: parseBoolean(include_all_commits),
+        include_all_commits: shouldIncludeAllCommits,
         line_height,
         title_color,
         ring_color,
